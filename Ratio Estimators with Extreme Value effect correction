@@ -1,0 +1,863 @@
+#function starts here
+Mixture_TPR_extreme <- function (NN, population_size_divider, NN_step, pop_total, save_population_data, save_sample_data, save_analysis_results, high_low_value_setting, max_min_value_setting) {
+  library('MASS')
+  
+  #This assigns name based on the user's response
+  #if high_low_value_setting=1 means that this will generate HIGH extreme value into variables Y and X. Any value outside 1 will generate LOW extreme value
+  #if max_min_value_setting=1 means that this will generate MAXIMUM extreme value into variables Y and X. Any value outside 1 will generate MINIMUM extreme value
+  Xtre_value = " "
+  High_Low_Max_Min = " "
+  if (high_low_value_setting == 10 && max_min_value_setting == 10) {
+    Xtre_value = " for HIGH Extreme Maximum Value (HEMaV) Analysis"
+    High_Low_Max_Min = 1010
+  } else {
+    if (high_low_value_setting == 10 && max_min_value_setting == 01) {
+      Xtre_value = " for HIGH Extreme Minimum Value (HEMiV) Analysis"
+      High_Low_Max_Min = 1001
+    } else {
+      if (high_low_value_setting == 01 && max_min_value_setting == 10) {
+        Xtre_value = " for LOW Extreme Maximum Value (LEMaV) Analysis"
+        High_Low_Max_Min = 0110
+      } else {
+        if (high_low_value_setting == 01 && max_min_value_setting == 01) {
+          Xtre_value = " for LOW Extreme Minimum Value (LEMiV) Analysis"
+          High_Low_Max_Min = 0101
+        } else {
+          Xtre_value = " Undefined Analysis"
+          High_Low_Max_Min = 0000
+        }
+      }
+    }
+  }
+  
+  #This will only initialize "exit_loop_alert"
+  exit_loop_alert <- 0
+  
+  #This prepares vector holder for data to be pooled together
+  data_columns_parameter1 <- vector("list", pop_total)
+  data_columns_parameter2 <- vector("list", pop_total)
+  data_columns_parameter3 <- vector("list", pop_total)
+  
+  #Population size (NN) and step to make up for 16 populations will be supplied by the user
+  for (i in c(1: pop_total )) {
+    #Set the first and second phase sample sizes
+    
+    NN_divider <- round(population_size_divider)
+    
+    #Begin: This does not allow the script to crash if the population is small for subsequent analysis. It automatocally allocate NN and n1
+    if ((NN < 0) || ((NN/NN_divider) < 10)) {
+      NN <- 60
+      n1 <- 20
+      exit_loop_alert <- 1
+    } else {
+      n1 <- round(NN/NN_divider)
+    }
+    #Begin: This does not allow the script to crash if the population is small for subsequent analysis. It automatocally allocate NN and n1
+    
+    #begin==================================================================
+    #simulate population data of Variable
+    #===For Ratio Estimator===
+    #Population data for the auxiliary variable
+    set.seed <- 0
+    set.seed <- round(sample(200:200000, 1))
+    
+    data <- mvrnorm(n=NN, mu = c(30, 110, 40), Sigma=matrix(c(40,28,0,28,40,28,0,28,40), ncol = 3) , empirical=TRUE)
+    
+    YY <- round(data[, 2])  # standard normal (mu=110, sd=6.324555)
+    X1 <- round(data[, 1])  # standard normal (mu=30, sd=6.324555)
+    X2 <- round(data[, 3])  # standard normal (mu=40, sd=6.324555)
+    
+    YY_original <- YY
+    YY_original_mean <- mean(YY_original)
+    X1_original <- X1
+    X2_original <- X2
+    #end==================================================================
+    
+    #begin==================================================================
+    
+    #Setting the first maximum value in Y
+    set.seed <- 0
+    set.seed <- round(sample(200000:1000000, 1))
+    YY_max_position <- sample(1:NN, 1)
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    
+    #BEGIN: This will confirm if it is MAXIMUM or MINIMUM value request
+    
+    #This will set the flexibility of the extreme value in YY
+    if (High_Low_Max_Min == 1010) {		#This will generate HIGH and MAXIMUM extreme value
+      YY[YY_max_position] <- round(sample(100000:200000, 1))
+    } else {
+      if (High_Low_Max_Min == 1001) {  #" for HIGH Extreme Minimum Value (HEMiV) Analysis"
+        YY[YY_max_position] <- round(sample(800:850, 1))
+      } else {
+        if (High_Low_Max_Min == 0110) { #" for LOW Extreme Maximum Value (LEMaV) Analysis"
+          YY[YY_max_position] <- round(sample(-800:-850, 1))
+        } else {
+          if (High_Low_Max_Min == 0101) {		#" for LOW Extreme Minimum Value (LEMiV) Analysis"
+            YY[YY_max_position] <- round(sample(-100000:-200000, 1))
+          } else {			#Xtre_value = " Undefined Analysis"
+            YY[YY_max_position] <- "UNDEFINED"
+          }
+        }
+      }
+    }
+    
+    YY_max_value <- YY[YY_max_position]
+    YY_new <- YY				#If this is not done, it will not see the YY_max_value in the previous YY		
+    
+    
+    #END: This will confirm if it is MAXIMUM or MINIMUM value request
+    
+    #end==================================================================
+    
+    #begin==================================================================
+    #Setting the first maximum value in X1
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    X1_max_position_1 <- sample(1:NN, 1)
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    
+    #BEGIN: This will confirm if it is MAXIMUM or MINIMUM value request
+    
+    #This will set the flexibility of the extreme value in X1
+    if (High_Low_Max_Min == 1010) {		#This will generate HIGH and MAXIMUM extreme value
+      X1[X1_max_position_1] <- round(sample(10000:20000, 1))
+    } else {
+      if (High_Low_Max_Min == 1001) {  #" for HIGH Extreme Minimum Value (HEMiV) Analysis"
+        X1[X1_max_position_1] <- round(sample(550:570, 1))
+      } else {
+        if (High_Low_Max_Min == 0110) { #" for LOW Extreme Maximum Value (LEMaV) Analysis"
+          X1[X1_max_position_1] <- round(sample(-550:-570, 1))
+        } else {
+          if (High_Low_Max_Min == 0101) {		#" for LOW Extreme Minimum Value (LEMiV) Analysis"
+            X1[X1_max_position_1] <- round(sample(-10000:-20000, 1))
+          } else {			#Xtre_value = " Undefined Analysis"
+            X1[X1_max_position_1] <- "UNDEFINED"
+          }
+        }
+      }
+    }
+    
+    X1_max_value_1 <- X1[X1_max_position_1]
+    X1_new <- X1		#If this is not done, it will not see the X1_max_value_1 in the previous X1		
+    
+    #end==================================================================
+    
+    #begin==================================================================
+    #Setting the first maximum value in X2
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    X2_max_position_1 <- sample(1:NN, 1)
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    
+    #BEGIN: This will confirm if it is MAXIMUM or MINIMUM value request
+    
+    #This will set the flexibility of the extreme value in X1
+    if (High_Low_Max_Min == 1010) {		#This will generate HIGH and MAXIMUM extreme value
+      X2[X2_max_position_1] <- round(sample(10000:20000, 1))
+    } else {
+      if (High_Low_Max_Min == 1001) {  #" for HIGH Extreme Minimum Value (HEMiV) Analysis"
+        X2[X2_max_position_1] <- round(sample(450:500, 1))
+      } else {
+        if (High_Low_Max_Min == 0110) { #" for LOW Extreme Maximum Value (LEMaV) Analysis"
+          X2[X2_max_position_1] <- round(sample(-450:-500, 1))
+        } else {
+          if (High_Low_Max_Min == 0101) {		#" for LOW Extreme Minimum Value (LEMiV) Analysis"
+            X2[X2_max_position_1] <- round(sample(-10000:-20000, 1))
+          } else {			#Xtre_value = " Undefined Analysis"
+            X1[X1_max_position_1] <- "UNDEFINED"
+          }
+        }
+      }
+    }
+    
+    X2_max_value_1 <- X2[X2_max_position_1]
+    X2_new <- X2		#If this is not done, it will not see the X2_max_value_1 in the previous X2		
+    #end==================================================================
+    
+    #begin==================================================================
+    #Sample for the auxiliary variable X1
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    x11 <- sample(X1, n1)
+    x11_original <- x11
+    
+    #Sample for the auxiliary variable X2
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    x12 <- sample(X2, n1)
+    x12_original <- x12
+    
+    #Sample for the auxiliary variable YY
+    set.seed <- 0
+    set.seed <- round(sample(500000:2000000, 1))
+    yy <- sample(YY, n1)
+    yy_original <- yy
+    #end==================================================================
+    
+    #begin==================================================================
+    #This tests for the presence of X1_max_value_1 in x11 and adds if it is not there in the sampled dataset
+    X1_max_value_1_is_present = 0
+    for (j1 in 1:n1)
+    {
+      if (x11[j1] == X1_max_value_1) {
+        #if X1_max_value_1 is present in the dataset, make confirm its presence
+        X1_max_value_1_is_present <- 1
+      }
+      if ((j1 == n1) && (X1_max_value_1_is_present == "0")) {
+        set.seed <- 0
+        set.seed <- round(sample(5:2000000, 1))
+        x_1st <- sample(1:n1, 1)
+        x11[x_1st] <- X1_max_value_1
+        #x11_new <- x11					#If this is not done, it will not see the X1_max_value_1 in the previous x11
+      }
+    }
+    x11_new <- x11					#If this is not done, it will not see the X1_max_value_1 in the previous x11
+    x11_new_min <- min(x11_new)
+    x11_new_max <- max(x11_new)
+    X1_max_value_1_is_present = 0
+    
+    #end==================================================================
+    
+    #begin==================================================================
+    #This tests for the presence of X1_max_value_1 in x11 and adds if it is not there in the sampled dataset
+    X2_max_value_1_is_present = 0
+    for (j2 in 1:n1)
+    {
+      if (x12[j2] == X2_max_value_1) {
+        #if X1_max_value_1 is present in the dataset, make confirm its presence
+        X2_max_value_1_is_present <- 1
+      }
+      if ((j2 == n1) && (X2_max_value_1_is_present == "0")) {
+        set.seed <- 0
+        set.seed <- round(sample(5:2000000, 1))
+        x2_1st <- sample(1:n1, 1)
+        x12[x2_1st] <- X2_max_value_1
+        #x11_new <- x11					#If this is not done, it will not see the X1_max_value_1 in the previous x11
+      }
+    }
+    x12_new <- x12					#If this is not done, it will not see the X1_max_value_1 in the previous x11
+    x12_new_min <- min(x12_new)
+    x12_new_max <- max(x12_new)
+    X2_max_value_1_is_present = 0
+    
+    #end==================================================================
+    
+    #begin==================================================================
+    #This tests for the presence of YY_max_value in yy and adds if it is not there in the sampled dataset
+    yy_max_value_1_is_present = 0
+    for (k1 in 1:n1)
+    {
+      if (yy[k1] == YY_max_value) {
+        yy_max_value_1_is_present <- 1
+      }
+      if ((k1 == n1) && (yy_max_value_1_is_present != "1")) {
+        set.seed <- 0
+        set.seed <- round(sample(1:2000000, 1))
+        yy[sample(1:n1, 1)] <- YY_max_value
+        yy_new <- yy					#If this is not done, it will not see the YY_max_value in the previous x11
+      }
+    }
+    #After testing for the presence of YY_max_value, if it is not present then add it
+    yy_new <- yy				#If this is not done, it will not see the YY_max_value in the previous x11
+    yy_new_min <- min(yy_new)
+    yy_new_max <- max(yy_new)
+    yy_max_value_1_is_present = 0
+    
+    #end==================================================================
+    
+    #begin==================================================================
+    YY_new_mean <- round(mean(YY_new), digit=4)
+    yy_new_mean <-  round(mean (yy_new), digit=4)
+    X1_new_mean <- round(mean(X1_new), digit=4)
+    x11_new_mean <- round(mean(x11_new), digit=4)
+    
+    X2_new_mean <- round(mean(X2_new), digit=4)
+    x12_new_mean <- round(mean(x12_new), digit=4)
+    
+    change_in_y <- (max(yy_new))-(min(yy_new))
+    change_in_x11 <- (max(x11_new))-(min(x11_new))
+    change_in_x12 <- (max(x12_new))-(min(x12_new))
+    
+    c0 <- round(change_in_y/(2*n1), digit=4)			#maximum value of yy_new
+    c0_Max <- round(change_in_y/(n1), digit=4)			#maximum value of yy_new
+    c1 <- round(change_in_x11/(2*n1), digit=4)			#maximum value of x11_new
+    c1_Max <- round(change_in_x11/(n1), digit=4)		#maximum value of x11_new
+    c2 <- round(change_in_x12/(2*n1), digit=4)			#maximum value of x12_new
+    c2_Max <- round(change_in_x12/(n1), digit=4)		#maximum value of x12_new
+    
+    X_max <- max(X1_new)												#maximum value of X1_new
+    CV_YY_mean <- round(sd(YY_new)/mean(YY_new), digit=4)
+    CV_X1_mean <- round(sd(X1_new)/mean(X1_new), digit=4)
+    CV_X2_mean <- round(sd(X2_new)/mean(X2_new), digit=4)
+    
+    cor_YX1 <- round(cor(YY_new, X1_new, method = "pearson"), digit=4)
+    cor_YX2 <- round(cor(YY_new, X2_new, method = "pearson"), digit=4)
+    cor_X1X2 <- round(cor(X1_new, X2_new, method = "pearson"), digit=4)
+    
+    cor_yx1 <-  round(cor(yy_new, x11_new, method = "pearson"), digit=8)
+    cor_yx1_square <- cor_yx1^2
+    cor_yx2 <-  round(cor(yy_new, x12_new, method = "pearson"), digit=8)
+    cor_yx2_square <- cor_yx2^2
+    cor_x1x2 <-  round(cor(x11_new, x12_new, method = "pearson"), digit=8)
+    cor_x1x2_square <- cor_x1x2^2
+    
+    tita <- (1/n1)-(1/NN)
+    yy_new_var <- var(yy_new)
+    x11_new_var <- var(x11_new)
+    x12_new_var <- var(x12_new)
+    SD_yy <- sd(yy_new)
+    SD_x1 <- sd(x11_new)
+    SD_x2 <- sd(x12_new)
+    COV_yyx11 <- cov(yy_new, x11_new)
+    COV_yyx12 <- cov(yy_new, x12_new)
+    COV_x11x12 <- cov(x11_new, x12_new)
+    
+    alpha_1 <- (X1_new_mean/(X1_new_mean + CV_X1_mean))
+    alpha_2 <- (X2_new_mean/(X2_new_mean + CV_X2_mean))
+    beta_1 <- (X1_new_mean/(X1_new_mean + cor_yx1))
+    beta_2 <- (X2_new_mean/(X2_new_mean + cor_yx2))
+    gamma_1 <- ((X1_new_mean * CV_X1_mean)/((X1_new_mean * CV_X1_mean)+ cor_yx1))
+    gamma_2 <- ((X2_new_mean * CV_X2_mean)/((X2_new_mean * CV_X2_mean)+ cor_yx2))
+    f_1 <- ((X1_new_mean * cor_yx1)/((X1_new_mean * cor_yx1)+ CV_X1_mean))
+    f_2 <- ((X2_new_mean * cor_yx2)/((X2_new_mean * cor_yx2)+ CV_X2_mean))
+    
+    R_1 <- (YY_new_mean/X1_new_mean)
+    R_2 <- (YY_new_mean/X2_new_mean)
+    
+    e_1 <- ((tita*YY_new_mean*n1)/(NN-1))*(((2*alpha_2^2*c2/X2_new_mean^2)*(change_in_x12-(n1*c2)))+((2*alpha_1^2*c1/X1_new_mean^2)*(change_in_x11-(n1*c1)))+((alpha_2/YY_new_mean)*(((c2*change_in_y)+(c0*change_in_x12)-(2*n1*c0*c2))/X2_new_mean))+((alpha_1/YY_new_mean)*(((c1*change_in_y)+(c0*change_in_x11)-(2*n1*c0*c1))/X1_new_mean))+(((alpha_1*alpha_2)/(X1_new_mean*X2_new_mean))*((c1*change_in_x12)+(c2*change_in_x11)-(2*n1*c1*c2))))	
+    
+    e_2 <- ((tita*YY_new_mean*n1)/(NN-1))*(((2*beta_2^2*c2/X2_new_mean^2)*(change_in_x12-(n1*c2)))+((2*beta_1^2*c1/X1_new_mean^2)*(change_in_x11-(n1*c1)))+((beta_2/YY_new_mean)*(((c2*change_in_y)+(c0*change_in_x12)-(2*n1*c0*c2))/X2_new_mean))+((beta_1/YY_new_mean)*(((c1*change_in_y)+(c0*change_in_x11)-(2*n1*c0*c1))/X1_new_mean))+(((beta_1*beta_2)/(X1_new_mean*X2_new_mean))*((c1*change_in_x12)+(c2*change_in_x11)-(2*n1*c1*c2))))
+    
+    e_3 <- ((tita*YY_new_mean*n1)/(NN-1))*(((2*gamma_2^2*c2/X2_new_mean^2)*(change_in_x12-(n1*c2)))+((2*gamma_1^2*c1/X1_new_mean^2)*(change_in_x11-(n1*c1)))+((gamma_2/YY_new_mean)*(((c2*change_in_y)+(c0*change_in_x12)-(2*n1*c0*c2))/X2_new_mean))+((gamma_1/YY_new_mean)*(((c1*change_in_y)+(c0*change_in_x11)-(2*n1*c0*c1))/X1_new_mean))+(((gamma_1*gamma_2)/(X1_new_mean*X2_new_mean))*((c1*change_in_x12)+(c2*change_in_x11)-(2*n1*c1*c2))))
+    
+    e_4 <- ((tita*YY_new_mean*n1)/(NN-1))*(((2*f_2^2*c2/X2_new_mean^2)*(change_in_x12-(n1*c2)))+((2*f_1^2*c1/X1_new_mean^2)*(change_in_x11-(n1*c1)))+((f_2/YY_new_mean)*(((c2*change_in_y)+(c0*change_in_x12)-(2*n1*c0*c2))/X2_new_mean))+((f_1/YY_new_mean)*(((c1*change_in_y)+(c0*change_in_x11)-(2*n1*c0*c1))/X1_new_mean))+(((f_1*f_2)/(X1_new_mean*X2_new_mean))*((c1*change_in_x12)+(c2*change_in_x11)-(2*n1*c1*c2))))
+    
+    miu_1 <- (tita/(2*(NN-1)))*(change_in_y^2+(R_2^2*alpha_2^2*change_in_x12^2)+(R_1^2*alpha_1^2*change_in_x11^2)-(2*change_in_y*((R_1*alpha_1*change_in_x11)+(R_2*alpha_2*change_in_x12)))+(2*alpha_1*alpha_2*R_1*R_2*change_in_x11*change_in_x12))
+    
+    miu_2 <- (tita/(2*(NN-1)))*(change_in_y^2+(R_2^2*beta_2^2*change_in_x12^2)+(R_1^2*beta_1^2*change_in_x11^2)-(2*change_in_y*((R_1*beta_1*change_in_x11)+(R_2*beta_2*change_in_x12)))+(2*beta_1*beta_2*R_1*R_2*change_in_x11*change_in_x12))
+    
+    miu_3 <- (tita/(2*(NN-1)))*(change_in_y^2+(R_2^2*gamma_2^2*change_in_x12^2)+(R_1^2*gamma_1^2*change_in_x11^2)-(2*change_in_y*((R_1*gamma_1*change_in_x11)+(R_2*gamma_2*change_in_x12)))+(2*gamma_1*gamma_2*R_1*R_2*change_in_x11*change_in_x12))
+    
+    miu_4 <- (tita/(2*(NN-1)))*(change_in_y^2+(R_2^2*f_2^2*change_in_x12^2)+(R_1^2*f_1^2*change_in_x11^2)-(2*change_in_y*((R_1*f_1*change_in_x11)+(R_2*f_2*change_in_x12)))+(2*f_1*f_2*R_1*R_2*change_in_x11*change_in_x12))
+    
+    #end==================================================================
+    
+    #Begin: ======================================================================================
+    #This will compute the reviewed and proposed sample means
+    #conventional regression mean of the Samiuddin and Hanif (2006) and (2 auxuliary variables but no extreme value corrected)
+    sample_mean_Samiuddin_Hanif_conventional <- round((yy_new_mean*(X1_new_mean/x11_new_mean)*(X2_new_mean/x12_new_mean)), digit=4)
+    
+    # Al-Hossain and Khan (2014) regression mean (2 auxuliary variables and extreme value corrected)
+    sample_mean_Al_Hossain_Khan_minimum <- round((((yy_new_mean + c0))*(X1_new_mean/(x11_new_mean + c1))*(X2_new_mean/(x12_new_mean + c2))), digit=4)
+    sample_mean_Al_Hossain_Khan_maximum <- round((((yy_new_mean - c0))*(X1_new_mean/(x11_new_mean - c1))*(X2_new_mean/(x12_new_mean - c2))), digit=4)
+    
+    # Khan et al. (2014) regression mean (1 auxuliary variable and extreme value corrected)
+    sample_mean_Khan1_minimum <- round((((yy_new_mean + c0))*((X1_new_mean + CV_X1_mean)/((x11_new_mean + c1) + CV_X1_mean))), digit=4)
+    sample_mean_Khan1_maximum <- round((((yy_new_mean - c0))*((X1_new_mean + CV_X1_mean)/((x11_new_mean - c1) + CV_X1_mean))), digit=4)
+    
+    sample_mean_Khan2_minimum <- round((((yy_new_mean + c0))*((X1_new_mean + cor_yx1)/((x11_new_mean + c1) + cor_yx1))), digit=4)
+    sample_mean_Khan2_maximum <- round((((yy_new_mean - c0))*((X1_new_mean + cor_yx1)/((x11_new_mean - c1) + cor_yx1))), digit=4)
+    
+    sample_mean_Khan3_minimum <- round((((yy_new_mean + c0))*(((X1_new_mean*CV_X1_mean) + cor_yx1)/(((x11_new_mean + c1)*CV_X1_mean) + cor_yx1))), digit=4)
+    sample_mean_Khan3_maximum <- round((((yy_new_mean - c0))*(((X1_new_mean*CV_X1_mean) + cor_yx1)/(((x11_new_mean - c1)*CV_X1_mean) + cor_yx1))), digit=4)
+    
+    sample_mean_Khan4_minimum <-round((((yy_new_mean + c0))*(((X1_new_mean*cor_yx1) + CV_X1_mean)/(((x11_new_mean + c1)*cor_yx1) + CV_X1_mean))), digit=4)
+    sample_mean_Khan4_maximum <-round((((yy_new_mean - c0))*(((X1_new_mean*cor_yx1) + CV_X1_mean)/(((x11_new_mean - c1)*cor_yx1) + CV_X1_mean))), digit=4)
+    
+    #proposed regression mean (2 auxuliary variables; extreme value corrected and improved with Khan et al. (2014) method)
+    proposed_sample_mean1_minimum <- round((((yy_new_mean + c0))*((X1_new_mean + CV_X1_mean)/((x11_new_mean + c1) + CV_X1_mean))*((X2_new_mean + CV_X2_mean)/((x12_new_mean + c2) + CV_X2_mean))), digit=4)
+    proposed_sample_mean1_maximum <- round((((yy_new_mean - c0))*((X1_new_mean + CV_X1_mean)/((x11_new_mean - c1) + CV_X1_mean))*((X2_new_mean + CV_X2_mean)/((x12_new_mean - c2) + CV_X2_mean))), digit=4)
+    
+    proposed_sample_mean2_minimum <- round((((yy_new_mean + c0))*((X1_new_mean + cor_yx1)/((x11_new_mean + c1) + cor_yx1))*((X2_new_mean + cor_yx2)/((x12_new_mean + c2) + cor_yx2))), digit=4)
+    proposed_sample_mean2_maximum <- round((((yy_new_mean - c0))*((X1_new_mean + cor_yx1)/((x11_new_mean - c1) + cor_yx1))*((X2_new_mean + cor_yx2)/((x12_new_mean - c2) + cor_yx2))), digit=4)
+    
+    proposed_sample_mean3_minimum <- round((((yy_new_mean + c0))*(((X1_new_mean*CV_X1_mean) + cor_yx1)/(((x11_new_mean + c1)*CV_X1_mean) + cor_yx1))*(((X2_new_mean*CV_X2_mean) + cor_yx2)/(((x12_new_mean + c2)*CV_X2_mean) + cor_yx2))), digit=4)
+    proposed_sample_mean3_maximum <- round((((yy_new_mean - c0))*(((X1_new_mean*CV_X1_mean) + cor_yx1)/(((x11_new_mean - c1)*CV_X1_mean) + cor_yx1))*(((X2_new_mean*CV_X2_mean) + cor_yx2)/(((x12_new_mean - c2)*CV_X2_mean) + cor_yx2))), digit=4)
+    
+    proposed_sample_mean4_minimum <- round((((yy_new_mean + c0))*(((X1_new_mean*cor_yx1) + CV_X1_mean)/(((x11_new_mean + c1)*cor_yx1) + CV_X1_mean))*(((X2_new_mean*cor_yx2) + CV_X2_mean)/(((x12_new_mean + c2)*cor_yx2) + CV_X2_mean))), digit=4)
+    proposed_sample_mean4_maximum <- round((((yy_new_mean - c0))*(((X1_new_mean*cor_yx1) + CV_X1_mean)/(((x11_new_mean - c1)*cor_yx1) + CV_X1_mean))*(((X2_new_mean*cor_yx2) + CV_X2_mean)/(((x12_new_mean - c2)*cor_yx2) + CV_X2_mean))), digit=4)
+    
+    #end:===========================================================================================================
+    
+    
+    #begin: Computation of bias for the concerned estimators========================================================
+    
+    #bias of conventional of regression mean of the Samiuddin and Hanif (2006) (2 auxuliary variables but no extreme value corrected)
+    #Does not have bias computation.
+    
+    # bias of Al-Hossain and Khan (2014) regression mean (2 auxuliary variables and extreme value corrected).
+    #Does not have bias computation.
+    
+    # Bias Khan et al. (2014) regression mean (1 auxuliary variable and extreme value corrected)
+    kp1 <- (YY_new_mean/(X1_new_mean + CV_X1_mean))
+    kp2 <- (YY_new_mean/(X1_new_mean + cor_yx1))
+    kp3 <- ((YY_new_mean * CV_X1_mean)/((X1_new_mean*CV_X1_mean) + cor_yx1))
+    kp4 <- ((YY_new_mean * cor_yx1)/((X1_new_mean*cor_yx1) + CV_X1_mean))
+    
+    bias_sample_mean_Khan1 <- round((((tita*kp1)/YY_new_mean)*((kp1*(x11_new_var-(((2*n1*c1)/(NN-1))*(change_in_x11-(n1*c1)))))-COV_yyx11+((n1/(NN-1))*((c1*change_in_y) + (c0*change_in_x11) - (2*n1*c0*c1) )))), digit=4)
+    bias_sample_mean_Khan2 <- round((((tita*kp2)/YY_new_mean)*((kp2*(x11_new_var-(((2*n1*c1)/(NN-1))*(change_in_x11-(n1*c1)))))-COV_yyx11+((n1/(NN-1))*((c1*change_in_y) + (c0*change_in_x11) - (2*n1*c0*c1) )))), digit=4)
+    bias_sample_mean_Khan3 <- round((((tita*kp3)/YY_new_mean)*((kp3*(x11_new_var-(((2*n1*c1)/(NN-1))*(change_in_x11-(n1*c1)))))-COV_yyx11+((n1/(NN-1))*((c1*change_in_y) + (c0*change_in_x11) - (2*n1*c0*c1) )))), digit=4)
+    bias_sample_mean_Khan4 <- round((((tita*kp4)/YY_new_mean)*((kp4*(x11_new_var-(((2*n1*c1)/(NN-1))*(change_in_x11-(n1*c1)))))-COV_yyx11+((n1/(NN-1))*((c1*change_in_y) + (c0*change_in_x11) - (2*n1*c0*c1) )))), digit=4)
+    
+    # Bias of the proposed regression mean (2 auxuliary variables and extreme value corrected): This is used in the proposed estimators
+    bias_conventional_regression_1 <- (tita*YY_new_mean)*((alpha_1^2*CV_X1_mean^2)+(alpha_2^2*CV_X2_mean^2)-(CV_YY_mean*((alpha_2*cor_yx2*CV_X2_mean)+(alpha_1*cor_yx1*CV_X1_mean)))+(alpha_1*alpha_2*cor_x1x2*CV_X1_mean*CV_X2_mean))
+    
+    bias_conventional_regression_2 <- (tita*YY_new_mean)*((beta_1^2*CV_X1_mean^2)+(beta_2^2*CV_X2_mean^2)-(CV_YY_mean*((beta_2*cor_yx2*CV_X2_mean)+(beta_1*cor_yx1*CV_X1_mean)))+(beta_1*beta_2*cor_x1x2*CV_X1_mean*CV_X2_mean))	
+    
+    bias_conventional_regression_3 <- (tita*YY_new_mean)*((gamma_1^2*CV_X1_mean^2)+(gamma_2^2*CV_X2_mean^2)-(CV_YY_mean*((gamma_2*cor_yx2*CV_X2_mean)+(gamma_1*cor_yx1*CV_X1_mean)))+(gamma_1*gamma_2*cor_x1x2*CV_X1_mean*CV_X2_mean))
+    
+    bias_conventional_regression_4 <- (tita*YY_new_mean)*((f_1^2*CV_X1_mean^2)+(f_2^2*CV_X2_mean^2)-(CV_YY_mean*((f_2*cor_yx2*CV_X2_mean)+(f_1*cor_yx1*CV_X1_mean)))+(f_1*f_2*cor_x1x2*CV_X1_mean*CV_X2_mean))
+    
+    #Computation of the bias of the sample mean for the 4 proposed estimators
+    bias_proposed_sample_mean1 <- round(bias_conventional_regression_1 - e_1, digit=4)
+    bias_proposed_sample_mean2 <- round(bias_conventional_regression_2 - e_2, digit=4)
+    bias_proposed_sample_mean3 <- round(bias_conventional_regression_3 - e_3, digit=4)
+    bias_proposed_sample_mean4 <- round(bias_conventional_regression_4 - e_4, digit=4)
+    #end: Computation of bias for the concerned estimators========================================================
+    
+    
+    #begin: Computation of MSE for the concerned estimators===========================================================
+    #Computation of the MSE of the sample mean for Al-Hossain and Khan (2014) estimator
+    MSE_conventional_regression <- tita*(yy_new_var +(R_1^2*x11_new_var)+(R_2^2*x12_new_var)+(2*R_1*R_2*COV_x11x12)-(2*R_2*COV_yyx12)-(2*R_1*COV_yyx11))
+    
+    #Computation of the MSE of the sample mean for Samiuddin and Hanif (2006) estimator
+    #MSE_Samiuddin_Hanif_conventional <- round(((tita*YY_new_mean^2)*(CV_YY_mean^2 + CV_X1_mean^2 + CV_X2_mean^2 - (2*CV_YY_mean*CV_X1_mean*cor_yx1)- (2*CV_YY_mean*CV_X2_mean*cor_yx2) +(2*CV_X1_mean*CV_X2_mean*cor_x1x2))) , digit=4)
+    MSE_Samiuddin_Hanif_conventional <- MSE_conventional_regression
+    
+    MSE_proposed_sample_mean_AlHossain_Khan <- round((MSE_conventional_regression - ((tita/(2*(NN-1)))*(change_in_y -(R_1*change_in_x11)-(R_2*change_in_x12))^2)), digit=4)
+    
+    #Computation of the MSE of the sample mean for the 4 Khan et al.(2014) estimators
+    MSE_Khan_sample_mean1 <- round((tita*(( yy_new_var + (kp1^2*x11_new_var) -(2*kp1*COV_yyx11) )-((1/(2*(NN-1)))*(change_in_y-(kp1*change_in_x11))^2))), digit=4)
+    MSE_Khan_sample_mean2 <- round((tita*(( yy_new_var + (kp2^2*x11_new_var) -(2*kp2*COV_yyx11) )-((1/(2*(NN-1)))*(change_in_y-(kp2*change_in_x11))^2))), digit=4)
+    MSE_Khan_sample_mean3 <- round((tita*(( yy_new_var + (kp3^2*x11_new_var) -(2*kp3*COV_yyx11) )-((1/(2*(NN-1)))*(change_in_y-(kp3*change_in_x11))^2))), digit=4)
+    MSE_Khan_sample_mean4 <- round((tita*(( yy_new_var + (kp4^2*x11_new_var) -(2*kp4*COV_yyx11) )-((1/(2*(NN-1)))*(change_in_y-(kp4*change_in_x11))^2))), digit=4)
+    
+    #These compute the conventional MSE for regression estimators with 2 auxiliary variables as used by Al-Hossain and Khan (2014) and in the proposed estimators
+    MSE_conventional_regression_1 <- (tita*YY_new_mean^2)*(CV_YY_mean^2-(2*CV_YY_mean*((alpha_1*c1*cor_YX1)+(alpha_2*c2*cor_YX2)))+(2*alpha_1*alpha_2*CV_X1_mean*CV_X2_mean*cor_X1X2)+(alpha_1^2*CV_X1_mean^2)+(alpha_2^2*CV_X2_mean^2))
+    
+    MSE_conventional_regression_2 <- (tita*YY_new_mean^2)*(CV_YY_mean^2-(2*CV_YY_mean*((beta_1*c1*cor_YX1)+(beta_2*c2*cor_YX2)))+(2*beta_1*beta_2*CV_X1_mean*CV_X2_mean*cor_X1X2)+(beta_1^2*CV_X1_mean^2)+(beta_2^2*CV_X2_mean^2))
+    
+    MSE_conventional_regression_3 <- (tita*YY_new_mean^2)*(CV_YY_mean^2-(2*CV_YY_mean*((gamma_1*c1*cor_YX1)+(gamma_2*c2*cor_YX2)))+(2*gamma_1*gamma_2*CV_X1_mean*CV_X2_mean*cor_X1X2)+(gamma_1^2*CV_X1_mean^2)+(gamma_2^2*CV_X2_mean^2))
+    
+    MSE_conventional_regression_4 <- (tita*YY_new_mean^2)*(CV_YY_mean^2-(2*CV_YY_mean*((f_1*c1*cor_YX1)+(f_2*c2*cor_YX2)))+(2*f_1*f_2*CV_X1_mean*CV_X2_mean*cor_X1X2)+(f_1^2*CV_X1_mean^2)+(f_2^2*CV_X2_mean^2))
+    
+    #Computation of the MSE of the sample mean for the 4 proposed estimators
+    MSE_proposed_sample_mean1 <- round(MSE_conventional_regression_1 - miu_1, digit=4)
+    MSE_proposed_sample_mean2 <- round(MSE_conventional_regression_2 - miu_2, digit=4)
+    MSE_proposed_sample_mean3 <- round(MSE_conventional_regression_3 - miu_3, digit=4)
+    MSE_proposed_sample_mean4 <- round(MSE_conventional_regression_4 - miu_4, digit=4)
+    
+    #end: Computation of MSE for the concerned estimators===========================================================
+    
+    #begin: Computation of variance for the concerned estimators===========================================================
+    
+    #Computation of the variance of the sample mean for the 4 Khan et al.(2014) estimators.
+    variance_Khan_sample_mean1 <- round((MSE_Khan_sample_mean1 - (bias_sample_mean_Khan1^2)), digit=4)
+    variance_Khan_sample_mean2 <- round((MSE_Khan_sample_mean2 - (bias_sample_mean_Khan2^2)), digit=4)
+    variance_Khan_sample_mean3 <- round((MSE_Khan_sample_mean3 - (bias_sample_mean_Khan3^2)), digit=4)
+    variance_Khan_sample_mean4 <- round((MSE_Khan_sample_mean4 - (bias_sample_mean_Khan4^2)), digit=4)
+    
+    #Computation of the variance of the sample mean for the 4 proposed estimators.
+    variance_proposed_sample_mean1 <- round((MSE_proposed_sample_mean1 - (bias_proposed_sample_mean1^2)), digit=4)
+    variance_proposed_sample_mean2 <- round((MSE_proposed_sample_mean2 - (bias_proposed_sample_mean2^2)), digit=4)
+    variance_proposed_sample_mean3 <- round((MSE_proposed_sample_mean3 - (bias_proposed_sample_mean3^2)), digit=4)
+    variance_proposed_sample_mean4 <- round((MSE_proposed_sample_mean4 - (bias_proposed_sample_mean4^2)), digit=4)
+    
+    #end: Computation of variance for the concerned estimators===========================================================
+    
+    #begin: Computation of Relative efficiency for the concerned estimators===========================================================
+    #Computation of the Relative Efficiency of the 4 proposed estimators to Samiuddin and Hanif (2006) estimator
+    RE_proposed1_to_samuiddin_Hanif	<- round((MSE_Samiuddin_Hanif_conventional/MSE_proposed_sample_mean1)*100 , digit=4)
+    RE_proposed2_to_samuiddin_Hanif	<- round((MSE_Samiuddin_Hanif_conventional/MSE_proposed_sample_mean2)*100 , digit=4)
+    RE_proposed3_to_samuiddin_Hanif	<- round((MSE_Samiuddin_Hanif_conventional/MSE_proposed_sample_mean3)*100 , digit=4)
+    RE_proposed4_to_samuiddin_Hanif	<- round((MSE_Samiuddin_Hanif_conventional/MSE_proposed_sample_mean4)*100 , digit=4)
+    
+    #Computation of the Relative Efficiency of the 4 proposed estimators to Al-Hossain and Khan (2014) estimator
+    RE_proposed1_to_AlHossain_Khan	<- round((MSE_proposed_sample_mean_AlHossain_Khan/MSE_proposed_sample_mean1)*100 , digit=4)
+    RE_proposed2_to_AlHossain_Khan	<- round((MSE_proposed_sample_mean_AlHossain_Khan/MSE_proposed_sample_mean2)*100 , digit=4)
+    RE_proposed3_to_AlHossain_Khan	<- round((MSE_proposed_sample_mean_AlHossain_Khan/MSE_proposed_sample_mean3)*100 , digit=4)
+    RE_proposed4_to_AlHossain_Khan	<- round((MSE_proposed_sample_mean_AlHossain_Khan/MSE_proposed_sample_mean4)*100 , digit=4)
+    
+    #Computation of the Relative Efficiency of the 4 proposed estimators to Khan et al. (2014) estimators
+    RE_proposed1_to_Khan_2014	<- round((MSE_Khan_sample_mean1/MSE_proposed_sample_mean1)*100 , digit=4)
+    RE_proposed2_to_Khan_2014	<- round((MSE_Khan_sample_mean2/MSE_proposed_sample_mean2)*100 , digit=4)
+    RE_proposed3_to_Khan_2014	<- round((MSE_Khan_sample_mean3/MSE_proposed_sample_mean3)*100 , digit=4)
+    RE_proposed4_to_Khan_2014	<- round((MSE_Khan_sample_mean4/MSE_proposed_sample_mean4)*100 , digit=4)
+    
+    #begin: Computation of Relative efficiency for the concerned estimators===========================================================
+    
+    #begin==================================================================
+    #This will create different dataframes for data and analysis documentation
+    
+    #This collates all the population data
+    population_data_df <- data.frame ( YY_original, X1_original, X2_original, YY_new, X1_new, X2_new )
+    
+    #This collates all the sample data
+    sample_data_df <- data.frame ( yy_original, x11_original, x12_original, yy_new, x11_new, x12_new )
+    
+    #This collates all the necessary computed assisting variables/parameters
+    q1 <- 29
+    analysis_result_df <- data.frame (
+      S_no = c(1:q1),
+      
+      Parameter_title1 = c("Pop_Size" ,"Sample_Size","tita", "Min_y", "Max_y", "Min_x1", "Max_x1","Min_x2", "Max_x2","C0", "C1", "C2", "YY_original_mean", "YY_new_mean", "yy_new_mean", "x11_new_mean", "x12_new_mean", "cor_yx1", "cor_yx2", "cor_x1x2", "epsilon_1", "epsilon_2", "epsilon_3", "epsilon_4", "miu_1", "miu_2", "miu_3", "miu_4", "______"),
+      Parameter_Values1 = c(NN ,n1,tita, yy_new_min, yy_new_max, x11_new_min, x11_new_max, x12_new_min, x12_new_max, c0, c1, c2, YY_original_mean ,YY_new_mean, yy_new_mean, x11_new_mean, x12_new_mean, cor_yx1, cor_yx2, cor_x1x2, e_1, e_2, e_3, e_4, miu_1, miu_2, miu_3, miu_4, "___"),
+      
+      estimator_title = c("Bias_Khan1" ,"Bias_Khan2","Bias_Khan3", "Bias_Khan4", "Bias_Prop1", "Bias_Prop2", "Bias_Prop3","Bias_Prop4", "var_Khan1", "var_Khan2", "var_Khan3", "var_Khan4", "var_Prop1", "var_Prop2", "var_Prop3", "var_Prop4", "MSE_conven_reg_Sam_Hanif", "MSE_AlHos", "MSE_Khan1", "MSE_Khan2", "MSE_Khan3", "MSE_Khan4", "MSE_Prop1", "MSE_Prop2", "MSE_Prop3", "MSE_Prop4", "  ___", "  ___", " ___"),
+      estimates = c(bias_sample_mean_Khan1 ,bias_sample_mean_Khan2,bias_sample_mean_Khan3, bias_sample_mean_Khan4, bias_proposed_sample_mean1, bias_proposed_sample_mean2, bias_proposed_sample_mean3, bias_proposed_sample_mean4, variance_Khan_sample_mean1, variance_Khan_sample_mean2, variance_Khan_sample_mean3, variance_Khan_sample_mean4, variance_proposed_sample_mean1, variance_proposed_sample_mean2, variance_proposed_sample_mean3, variance_proposed_sample_mean4, MSE_Samiuddin_Hanif_conventional, MSE_proposed_sample_mean_AlHossain_Khan, MSE_Khan_sample_mean1, MSE_Khan_sample_mean2, MSE_Khan_sample_mean3, MSE_Khan_sample_mean4, MSE_proposed_sample_mean1, MSE_proposed_sample_mean2, MSE_proposed_sample_mean3, MSE_proposed_sample_mean4, "  ___", "  ___", " ___"),
+      
+      Parameter_title2 = c("RE(Pro1/S_H)" ,"RE(Pro2/S_H)","RE(Pro3/S_H)", "RE(Pro4/S_H)", "RE(Pro1/A_K)", "RE(Pro2/A_K)", "RE(Pro3/A_K)","RE(Pro4/A_K)", "RE(Pro1/Kh1)", "RE(Pro2/Kh2)", "RE(Pro3/Kh3)", "RE(Pro4/Kh4)" ," ___", "SamHaf_mean", "AlHos_mean", "Khan_mean1", "Khan_mean2", "Khan_mean3", "Khan_mean4", "Prop_mean1", "Prop_mean2", "Prop_mean3", "Prop_mean4", " ___", " ___", " ___", " ___", "  ___", " ___"),
+      Parameter_Values2 = c(RE_proposed1_to_samuiddin_Hanif ,RE_proposed2_to_samuiddin_Hanif, RE_proposed3_to_samuiddin_Hanif, RE_proposed4_to_samuiddin_Hanif, RE_proposed1_to_AlHossain_Khan, RE_proposed2_to_AlHossain_Khan, RE_proposed3_to_AlHossain_Khan, RE_proposed4_to_AlHossain_Khan, RE_proposed1_to_Khan_2014, RE_proposed2_to_Khan_2014, RE_proposed3_to_Khan_2014, RE_proposed4_to_Khan_2014 ," ___", sample_mean_Samiuddin_Hanif_conventional, sample_mean_Al_Hossain_Khan_maximum, sample_mean_Khan1_maximum, sample_mean_Khan2_maximum, sample_mean_Khan3_maximum, sample_mean_Khan4_maximum, proposed_sample_mean1_maximum, proposed_sample_mean2_maximum, proposed_sample_mean3_maximum, proposed_sample_mean4_maximum, " ___", " ___", " ___", " ___", "  ___", " ___"),
+      
+      stringsAsFactors = FALSE
+    )
+    
+    #begin: This will prepare list for the compilation and saving of the population parameter 1 for not more than 50 populations========================
+    data_columns_parameter1[[i]] <- analysis_result_df$Parameter_Values1
+    pop_parameter <- unlist (data_columns_parameter1)
+    #end: This will prepare list for the compilation and saving of the population parameter 1 for not more than 50 populations========================
+    
+    #begin: This will prepare list for the compilation and saving of the population estimates for not more than 50 populations========================
+    data_columns_parameter2[[i]] <- analysis_result_df$estimates
+    pop_parameter2 <- unlist (data_columns_parameter2)
+    #end: This will prepare list for the compilation and saving of the population estimates for not more than 50 populations========================
+    
+    #begin: This will prepare list for the compilation and saving of the population parameter 2 for not more than 50 populations========================
+    data_columns_parameter3[[i]] <- analysis_result_df$Parameter_Values2
+    pop_parameter3 <- unlist (data_columns_parameter3)
+    #end: This will prepare list for the compilation and saving of the population parameter 2 for not more than 50 populations========================
+    
+    #begin==================================================================
+    if (save_population_data == 1) {		#1 = only save "population_data_df" as csv file
+      csvfile <- paste ("population_data",i, c(Xtre_value),".csv")
+      write.csv(population_data_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+      
+      print(paste ("You only requested to save POPULATION DATA for poplulation", i, c(Xtre_value)) )
+      print(paste ("   ") )
+    }
+    else {
+      if (save_population_data == 2) {	#2 = only screen print "population_data_df" as csv file
+        print (population_data_df)
+        print(paste ("You only requested to screen print POPULATION DATA for poplulation", i, c(Xtre_value)) )
+        print(paste ("   ") )
+      }
+      else {
+        if (save_population_data == 3) {	#3 = both save and screen print "population_data_df" as csv file
+          csvfile <- paste ("population_data",i, c(Xtre_value),".csv")
+          write.csv(population_data_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+          print (population_data_df)
+          
+          print(paste ("You requested to save and screen print POPULATION DATA for poplulation", i, c(Xtre_value)) )
+          print(paste ("   ") )
+        }
+        else {
+          print(paste ("You did not request to save nor screen print POPULATION DATA for poplulation", i, c(Xtre_value)) )
+          print(paste ("   ") )
+        }
+      }
+    }
+    
+    if (save_sample_data == 1) {		#1 = only save "sample_data_df" as csv file
+      csvfile <- paste ("sample_data",i, c(Xtre_value),".csv")
+      write.csv(sample_data_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+      
+      print(paste ("You only requested to save SAMPLE DATA for poplulation", i, c(Xtre_value)) )
+    }
+    else {
+      if (save_sample_data == 2) {	#2 = only screen print "sample_data_df" as csv file
+        print (sample_data_df)
+        print(paste ("You only requested to screen print SAMPLE DATA for poplulation", i, c(Xtre_value)) )
+      }
+      else {
+        if (save_sample_data == 3) {	#3 = both save and screen print "sample_data_df" as csv file
+          csvfile <- paste ("sample_data",i, c(Xtre_value),".csv")
+          write.csv(sample_data_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+          print (sample_data_df)
+          
+          print(paste ("You requested to save and screen print SAMPLE DATA for poplulation", i, c(Xtre_value)) )
+        }
+        else {
+          print(paste ("You did not request to save nor screen print SAMPLE DATA for poplulation", i, c(Xtre_value)) )
+        }
+      }
+    }		
+    
+    if (save_analysis_results == 1) {		#1 = only save "population_data_df" as csv file
+      csvfile <- paste ("analysis_results",i, c(Xtre_value),".csv")
+      write.csv(analysis_result_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+      
+      print(paste ("You only requested to save ANALYIS RESULTS for poplulation", i, c(Xtre_value)) )
+    }
+    else {
+      if (save_analysis_results == 2) {	#2 = only screen print "population_data_df" as csv file
+        print (analysis_result_df)
+        print(paste ("You only requested to screen print ANALYIS RESULTS for poplulation", i, c(Xtre_value)) )
+      }
+      else {
+        if (save_analysis_results == 3) {	#3 = both save and screen print "population_data_df" as csv file
+          csvfile <- paste ("analysis_results",i, c(Xtre_value),".csv")
+          write.csv(analysis_result_df, file=csvfile, append = TRUE, fileEncoding = "UTF-16LE")
+          print (analysis_result_df)
+          
+          print(paste ("You requested to save and screen print ANALYIS RESULTS for poplulation", i, c(Xtre_value)) )
+        }
+        else {
+          print(paste ("You did not request to save nor screen print ANALYIS RESULTS for poplulation", i, c(Xtre_value)) )
+        }
+      }
+    }
+    #end==================================================================
+    
+    #Begin: This does not allow the script to crash if the population is small for subsequent analysis
+    if (exit_loop_alert == 1) {
+      exit_loop_alert <- 0
+      print (paste("##########The analysis can only stop at ", i, " interation because the population size is small for further analysis.############"))
+      break;		
+    }
+    #End: This does not allow the script to crash if the population is small for subsequent analysis
+    
+    NN = NN - NN_step
+    
+    
+    #begin:===============================================================
+    
+  }
+  
+  #begin: This will compile and save the population parameter 1for not more than 50 populations========================
+  Parameter_title1 = c("Pop_Size" ,"Sample_Size","tita", "Min_y", "Max_y", "Min_x1", "Max_x1","Min_x2", "Max_x2","C0", "C1", "C2", "YY_original_mean", "YY_new_mean", "yy_new_mean", "x11_new_mean", "x12_new_mean", "cor_yx1", "cor_yx2", "cor_x1x2", "epsilon_1", "epsilon_2", "epsilon_3", "epsilon_4", "miu_1", "miu_2", "miu_3", "miu_4", "______")
+  
+  d1 <- 1
+  
+  combined_data_columns1_df <- data.frame (
+    Parameter_title1, 
+    pop_parameter[c(d1:q1)], 
+    pop_parameter[c(((d1*q1)+1):((d2<-(d1+1))*q1))], 
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))]
+    
+  )
+  
+  #com_para <- paste ("combined_parameter1.csv")
+  write.csv(combined_data_columns1_df, file="computed_parameter1.csv", append = TRUE, fileEncoding = "UTF-16LE")
+  #end: This will compile and save the population parameter 1 for not more than 50 populations========================
+  
+  #begin: This will compile and save the population estimates for not more than 50 populations========================
+  Parameter_title2 = c("Bias_Khan1" ,"Bias_Khan2","Bias_Khan3", "Bias_Khan4", "Bias_Prop1", "Bias_Prop2", "Bias_Prop3","Bias_Prop4", "var_Khan1", "var_Khan2", "var_Khan3", "var_Khan4", "var_Prop1", "var_Prop2", "var_Prop3", "var_Prop4", "MSE_conven_reg_Sam_Hanif", "MSE_AlHos", "MSE_Khan1", "MSE_Khan2", "MSE_Khan3", "MSE_Khan4", "MSE_Prop1", "MSE_Prop2", "MSE_Prop3", "MSE_Prop4", "  ___", "  ___", " ___")
+  
+  d1 <- 1
+  
+  combined_data_columns2_df <- data.frame (
+    Parameter_title2,
+    pop_parameter2[c(d1:q1)], 
+    pop_parameter2[c(((d1*q1)+1):((d2<-(d1+1))*q1))], 
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter2[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))]
+    
+  )
+  
+  #com_para <- paste ("combined_parameter1.csv")
+  write.csv(combined_data_columns2_df, file="MSE_Var_Bias.csv", append = TRUE, fileEncoding = "UTF-16LE")
+  #end: This will compile and save the population estimates for not more than 50 populations========================
+  
+  #begin: This will compile and save the population parameter 2 for not more than 50 populations========================
+  Parameter_title3 = c("RE(Pro1/S_H)" ,"RE(Pro2/S_H)","RE(Pro3/S_H)", "RE(Pro4/S_H)", "RE(Pro1/A_K)", "RE(Pro2/A_K)", "RE(Pro3/A_K)","RE(Pro4/A_K)", "RE(Pro1/Kh1)", "RE(Pro2/Kh2)", "RE(Pro3/Kh3)", "RE(Pro4/Kh4)" ," ___", " SamHaf_mean", "AlHos_mean", "Khan_mean1", "Khan_mean2", "Khan_mean3", "AKhan_mean4", "Prop_mean1", "Prop_mean2", "Prop_mean3", "Prop_mean4", " ___", " ___", " ___", " ___", "  ___", " ___")
+  
+  d1 <- 1
+  
+  combined_data_columns3_df <- data.frame (
+    Parameter_title3,
+    pop_parameter3[c(d1:q1)], 
+    pop_parameter3[c(((d1*q1)+1):((d2<-(d1+1))*q1))], 
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))],
+    pop_parameter3[c((((d1<-d1+1)*q1)+1):((d2<-(d2+1))*q1))]
+    
+  )
+  
+  write.csv(combined_data_columns3_df, file="Relative_efficiency.csv", append = TRUE, fileEncoding = "UTF-16LE")
+  #end: This will compile and save the population parameter 2 for not more than 50 populations========================
+  
+}
+
+#################3#READ ME INSTRUCTION
+#NN:						This is the starting population size
+#population_size_divider:	This value will divide NN to obtain sample size i.e. n = NN/population_size_divider
+#NN_step:				This is the difference between one population size and the next population size
+#pop_total: 		This is the total nummber of time you want the process to be repeated
+#save_population_data: 		1= To save to population data, 2=To print the data on the screen, 3=Both screen print and save data
+#save_sample_data: 				1= To save to sample data, 2=To print the data on the screen, 3=Both screen print and save data
+#save_analysis_results: 	1= To save to analysis result, 2=To print the result on the screen, 3=Both screen print and save result
+#high_low_value_setting:	10= will generate HIGH extreme value into variables Y and X while 01 will generate LOW extreme value
+#max_min_value_setting =  10= will generate maximum extreme value while 01= will generate minimum extreme value
+Mixture_TPR_extreme( NN=4000, population_size_divider=3, NN_step=200, pop_total=30, save_population_data=3, save_sample_data=3, save_analysis_results=3, high_low_value_setting = 01, max_min_value_setting = 01 )
